@@ -1,0 +1,31 @@
+# Environment & Credentials
+.env
+backend/.env
+
+# Python Virtual Environments & Caches
+backend/venv/
+venv/
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+
+# Storage & Encrypted Artifacts
+backend/storage/encrypted/*
+!backend/storage/encrypted/.gitkeep
+*.bin
+
+# Node & Frontend Build Artifacts
+quantum-shield/node_modules/
+quantum-shield/dist/
+quantum-shield/.vite/
+
+# OS & Zip Files
+quantum-shield.zip
+scratch/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,90 @@
+name: QuantumShield CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-tests:
+    name: Run Backend Security & Crypto Pytest Suite
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: quantum_shield
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install C dependencies & build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev libffi-dev
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Alembic DB Migrations & Seed Users
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/quantum_shield
+          JWT_SECRET: ci_test_jwt_secret_key_quantumshield
+        run: |
+          cd backend
+          alembic upgrade head
+          python seed_users.py
+
+      - name: Execute Pytest Test Suite
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/quantum_shield
+          JWT_SECRET: ci_test_jwt_secret_key_quantumshield
+        run: |
+          cd backend
+          pytest tests/ -v
+
+  frontend-build:
+    name: Verify Frontend React/TypeScript Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: quantum-shield/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd quantum-shield
+          npm install
+
+      - name: Run Vite production build
+        run: |
+          cd quantum-shield
+          npm run build
