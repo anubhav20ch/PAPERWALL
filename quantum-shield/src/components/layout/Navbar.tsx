@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Menu } from 'lucide-react';
-import { mockUser } from '../../data/mockData';
+import { Search, Bell, Menu, User as UserIcon } from 'lucide-react';
+import { useAuth } from '../../lib/AuthContext';
 
 export function Navbar() {
   const [time, setTime] = useState(new Date());
+  const { user } = useAuth();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const displayName = user?.name || 'Administrator';
+  const displayRole = user?.role_name 
+    ? (user.role_name.charAt(0).toUpperCase() + user.role_name.slice(1)) 
+    : 'Admin';
 
   return (
     <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6 sticky top-0 z-10">
@@ -38,14 +44,12 @@ export function Navbar() {
 
         <div className="flex items-center space-x-3 border-l border-border pl-6">
           <div className="text-right hidden sm:block">
-            <div className="text-sm font-semibold text-text-main leading-tight">{mockUser.name}</div>
-            <div className="text-xs text-text-muted">{mockUser.role}</div>
+            <div className="text-sm font-semibold text-text-main leading-tight">{displayName}</div>
+            <div className="text-xs text-text-muted">{displayRole}</div>
           </div>
-          <img
-            src={mockUser.avatar}
-            alt="User Avatar"
-            className="w-9 h-9 rounded-full border border-border object-cover"
-          />
+          <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">
+            <UserIcon className="w-5 h-5" />
+          </div>
         </div>
       </div>
     </header>

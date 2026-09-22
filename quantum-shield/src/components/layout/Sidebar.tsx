@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../lib/AuthContext';
 import { 
   LayoutDashboard, 
   Upload, 
@@ -15,23 +16,38 @@ import {
   Info
 } from 'lucide-react';
 
-const menuItems = [
-  { icon: LayoutDashboard, label: 'Security Dashboard', path: '/dashboard/admin' },
-  { icon: Activity, label: 'Live Crypto Visualizer', path: '/dashboard/visualizer' },
-  { icon: BookOpen, label: 'AES S-Box Sandbox', path: '/dashboard/sbox' },
-  { icon: ShieldCheck, label: 'Crypto Analytics', path: '/dashboard/crypto-analytics' },
-  { icon: Activity, label: 'Performance Benchmarks', path: '/dashboard/benchmarks' },
-  { icon: ShieldCheck, label: 'Attack Lab', path: '/dashboard/attack-lab' },
-  { icon: FileText, label: 'Incident Center', path: '/dashboard/incidents' },
-  { icon: Upload, label: 'Upload Paper', path: '/dashboard/upload' },
-  { icon: FileText, label: 'Exam Papers', path: '/dashboard/papers' },
-  { icon: Shield, label: 'Access Policies', path: '/dashboard/policies' },
-  { icon: Users, label: 'Research Mode', path: '/dashboard/research' },
-  { icon: Info, label: 'About & Creators', path: '/dashboard/about' },
-  { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+const allMenuItems = [
+  // Role Dashboard
+  { icon: LayoutDashboard, label: 'Security Dashboard', path: '/dashboard/admin', roles: [1] },
+  { icon: LayoutDashboard, label: 'Professor Dashboard', path: '/dashboard/professor', roles: [2] },
+  { icon: LayoutDashboard, label: 'Exam Centre Dashboard', path: '/dashboard/centre', roles: [3] },
+
+  // Role Features
+  { icon: Upload, label: 'Upload Paper', path: '/dashboard/upload', roles: [1, 2] },
+  { icon: FileText, label: 'Exam Papers', path: '/dashboard/papers', roles: [1, 2, 3] },
+  { icon: Activity, label: 'Live Crypto Visualizer', path: '/dashboard/visualizer', roles: [1, 2, 3] },
+  { icon: BookOpen, label: 'AES S-Box Sandbox', path: '/dashboard/sbox', roles: [1, 2, 3] },
+
+  // Admin Only Management & Security Tools
+  { icon: Shield, label: 'Access Policies', path: '/dashboard/policies', roles: [1] },
+  { icon: ShieldCheck, label: 'Attack Lab', path: '/dashboard/attack-lab', roles: [1] },
+  { icon: FileText, label: 'Incident Center', path: '/dashboard/incidents', roles: [1] },
+  { icon: Users, label: 'User Management', path: '/dashboard/users', roles: [1] },
+  { icon: ShieldCheck, label: 'Crypto Analytics', path: '/dashboard/crypto-analytics', roles: [1] },
+  { icon: Activity, label: 'Performance Benchmarks', path: '/dashboard/benchmarks', roles: [1] },
+  { icon: Users, label: 'Research Mode', path: '/dashboard/research', roles: [1] },
+  { icon: Settings, label: 'Settings', path: '/dashboard/settings', roles: [1] },
+
+  // Info
+  { icon: Info, label: 'About & Creators', path: '/dashboard/about', roles: [1, 2, 3] },
 ];
 
 export function Sidebar() {
+  const { user } = useAuth();
+  const currentRoleId = user?.role_id || 1;
+
+  const menuItems = allMenuItems.filter(item => item.roles.includes(currentRoleId));
+
   return (
     <aside className="w-64 bg-white border-r border-border h-screen sticky top-0 flex flex-col hidden md:flex">
       <div className="h-16 flex items-center px-6 border-b border-border">
@@ -40,7 +56,9 @@ export function Sidebar() {
       </div>
       
       <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
-        <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4 px-2">Menu</div>
+        <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4 px-2">
+          {currentRoleId === 1 ? 'Admin Navigation' : currentRoleId === 2 ? 'Professor Navigation' : 'Proctor Navigation'}
+        </div>
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
