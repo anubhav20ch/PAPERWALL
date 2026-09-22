@@ -22,10 +22,22 @@ export function Users() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/threat/risk-scores');
-      setUsers(res || []);
+      const res = await api.get('/users');
+      const formatted = (res || []).map((u: any) => ({
+        ...u,
+        user_id: u.id,
+        role: u.role_id === 1 ? 'Admin' : u.role_id === 2 ? 'Professor' : 'Exam Centre',
+        status: u.status || 'Active'
+      }));
+      setUsers(formatted);
     } catch (e) {
       console.error('Failed to fetch users:', e);
+      try {
+        const fallback = await api.get('/threat/risk-scores');
+        setUsers(fallback || []);
+      } catch (err) {
+        console.error('Fallback failed:', err);
+      }
     } finally {
       setLoading(false);
     }
