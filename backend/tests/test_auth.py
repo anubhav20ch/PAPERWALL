@@ -38,3 +38,17 @@ def test_rate_limiting_triggers_on_login(client):
 
     # At least one request beyond rate limit should return 429
     assert 429 in responses or responses.count(401) >= 10
+
+def test_user_registration_success(client):
+    """Verifies new user registration endpoint works and returns access token."""
+    reg_payload = {
+        "email": "new.prof@university.edu",
+        "name": "Dr. Grace Hopper",
+        "password": "newpassword123",
+        "role_id": 2,
+        "department": "Computer Science"
+    }
+    res = client.post("/api/register", json=reg_payload)
+    assert res.status_code == 200
+    assert "access_token" in res.json()
+

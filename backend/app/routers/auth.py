@@ -54,3 +54,53 @@ async def read_users_me(
     current_user: models.User = Depends(security.get_current_user)
 ):
     return current_user
+
+
+@router.post("/register", response_model=schemas.Token)
+async def register_user(
+    user_in: schemas.UserCreate,
+    db: Session = Depends(database.get_db)
+):
+    existing_user = db.query(models.User).filter(models.User.email == user_in.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this email address already exists."
+        )
+
+    allowed_role = user_in.role_id if user_in.role_id in [1, 2, 3] else 2
+
+    new_user = models.User(
+        email=user_in.email,
+        name=user_in.name,
+        hashed_password=security.get_password_hash(user_in.password),
+        role_id=allowed_role,
+        department=user_in.department or "General",
+        status="Active"
+    )
+    db.add(new_user)
+
+    audit = models.AuditLog(
+        user_id=new_user.email,
+        action=f"New Account Registered (Role {allowed_role})",
+        status="Success",
+        ip_address="127.0.0.1"
+    )
+    db.add(audit)
+    db.commit()
+    db.refresh(new_user)
+
+    access_token = security.create_access_token(data={"sub": new_user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/users", response_model=list[schemas.UserResponse])
+async def list_all_users(
+    current_user: models.User = Depends(security.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    if current_user.role_id != 1:  # Admin only
+        raise HTTPException(status_code=403, detail="Only administrators can list system users.")
+    return db.query(models.User).order_by(models.User.id.asc()).all()
+
+
